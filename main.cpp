@@ -22,6 +22,7 @@
 #define THROTTLE_OUT_MAX    2000
 #define THROTTLE_DEFAULT    900
 #define PWM_TIMEOUT         100000
+#define T_CAP               1750
 
 /* servos for writing PWM to actuators */
 Servo steeringOutput;
@@ -89,6 +90,8 @@ void loop() {
     sout = autoStrIn == 0 ? STEERING_DEFAULT : autoStrIn;
     tout = autoThrIn == 0 ? THROTTLE_DEFAULT : autoThrIn;
   }
+
+  tout = tout > T_CAP ? T_CAP : tout; /* limit throttle to some arbitrary number */
 
   steeringOutput.writeMicroseconds((int)sout);
   throttleOutput.writeMicroseconds((int)tout);
