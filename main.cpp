@@ -29,7 +29,7 @@ Servo steeringOutput;
 Servo throttleOutput;
 
 /* variables for blinking LED (debug) */
-Metro blinkMetro = Metro(1000);
+Metro blinkMetro = Metro(333);
 bool ledState = 0;
 
 enum state {
@@ -39,6 +39,34 @@ enum state {
 
 unsigned long sout;
 unsigned long tout;
+unsigned long autoStrIn;
+unsigned long autoThrIn;
+
+unsigned long rreadThr;
+void risingThr();
+void fallingThr()
+{
+  autoThrIn = micros() - rreadThr;
+  attachInterrupt(digitalPinToInterrupt(THROTTLE_AUTOPILOT), risingThr, RISING);
+}
+void risingThr()
+{
+  rreadThr = micros();
+  attachInterrupt(digitalPinToInterrupt(THROTTLE_AUTOPILOT), fallingThr, FALLING);
+}
+
+unsigned long rreadStr;
+void risingStr();
+void fallingStr()
+{
+  autoStrIn = micros() - rreadStr;
+  attachInterrupt(digitalPinToInterrupt(STEERING_AUTOPILOT), risingStr, RISING);
+}
+void risingStr()
+{
+  rreadStr = micros();
+  attachInterrupt(digitalPinToInterrupt(STEERING_AUTOPILOT), fallingStr, FALLING);
+}
 
 void setup() {
   /* setup input pins */
@@ -48,6 +76,8 @@ void setup() {
   pinMode(RCVR_CH3, INPUT);
   pinMode(STEERING_AUTOPILOT, INPUT);
   pinMode(THROTTLE_AUTOPILOT, INPUT); 
+  attachInterrupt(digitalPinToInterrupt(THROTTLE_AUTOPILOT), risingThr, RISING);
+  attachInterrupt(digitalPinToInterrupt(STEERING_AUTOPILOT), risingStr, RISING);
 
   /* attach output servos */
   steeringOutput.attach(STEERING_OUTPUT);
@@ -68,13 +98,13 @@ void setup() {
   Serial.begin(9600);
 }
 
+
+
 void loop() {
 
   unsigned long ch3in = pulseIn(RCVR_CH3, HIGH, PWM_TIMEOUT);
   unsigned long ch1in = pulseIn(RCVR_CH1, HIGH, PWM_TIMEOUT);
   unsigned long ch2in = pulseIn(RCVR_CH2, HIGH, PWM_TIMEOUT);
-  unsigned long autoStrIn = pulseIn(STEERING_AUTOPILOT, HIGH, PWM_TIMEOUT);
-  unsigned long autoThrIn = pulseIn(THROTTLE_AUTOPILOT, HIGH, PWM_TIMEOUT);
 
   Serial.print(ch1in); Serial.print(" "); Serial.print(ch2in); Serial.print(" "); Serial.print(ch3in); Serial.print(" \r");
 
@@ -96,7 +126,9 @@ void loop() {
   steeringOutput.writeMicroseconds((int)sout);
   throttleOutput.writeMicroseconds((int)tout);
 
-  // Serial.print(sout); Serial.print(" "); Serial.print(ch3in); Serial.print(" "); Serial.println(tout);   
+  Serial.print(sout); Serial.print(" "); Serial.print(tout); Serial.print(" | ");
+  Serial.print(autoStrIn); Serial.print(" "); Serial.print(autoThrIn); Serial.print(" | ");
+  Serial.print(ch1in); Serial.print(" "); Serial.print(ch2in); Serial.print(" "); Serial.print(ch3in); Serial.println();
 
   if (blinkMetro.check()) {   /* LED blink to check loop still running */ 
     ledState = !ledState;
