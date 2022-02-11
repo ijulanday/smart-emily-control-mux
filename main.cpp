@@ -22,7 +22,7 @@
 #define THROTTLE_OUT_MAX    2000
 #define THROTTLE_DEFAULT    900
 #define PWM_TIMEOUT         100000
-#define T_CAP               1750
+#define T_CAP               2000
 
 /* servos for writing PWM to actuators */
 Servo steeringOutput;
@@ -82,8 +82,8 @@ void setup() {
   /* attach output servos */
   steeringOutput.attach(STEERING_OUTPUT);
   throttleOutput.attach(THROTTLE_OUTPUT);
-  steeringOutput.writeMicroseconds(STEERING_DEFAULT);
-  throttleOutput.writeMicroseconds(THROTTLE_DEFAULT);
+  // steeringOutput.writeMicroseconds(STEERING_DEFAULT);
+  // throttleOutput.writeMicroseconds(THROTTLE_DEFAULT);
 
   /* configure LED for debug */
   pinMode(LED_BUILTIN, OUTPUT);
@@ -92,8 +92,8 @@ void setup() {
   boat_state = manual;
   sout = STEERING_DEFAULT;
   tout = THROTTLE_DEFAULT;
-  steeringOutput.writeMicroseconds((int)sout);
-  throttleOutput.writeMicroseconds((int)tout);
+  // steeringOutput.writeMicroseconds((int)sout);
+  // throttleOutput.writeMicroseconds((int)tout);
 
   Serial.begin(9600);
 }
