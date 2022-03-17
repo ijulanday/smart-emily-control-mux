@@ -37,6 +37,8 @@ enum state {
   manual
 } boat_state;
 
+unsigned long sprev;
+unsigned long tprev;
 unsigned long sout;
 unsigned long tout;
 unsigned long autoStrIn;
@@ -68,6 +70,11 @@ void risingStr()
   attachInterrupt(digitalPinToInterrupt(STEERING_AUTOPILOT), fallingStr, FALLING);
 }
 
+bool acceptable(unsigned long pwm) 
+{
+  return pwm >= 900 & pwm <= 2000;
+}
+
 void setup() {
   /* setup input pins */
   
@@ -92,6 +99,8 @@ void setup() {
   boat_state = manual;
   sout = STEERING_DEFAULT;
   tout = THROTTLE_DEFAULT;
+  sprev = sout;
+  tprev = tout;
   steeringOutput.writeMicroseconds((int)sout);
   throttleOutput.writeMicroseconds((int)tout);
 
@@ -106,29 +115,32 @@ void loop() {
   unsigned long ch1in = pulseIn(RCVR_CH1, HIGH, PWM_TIMEOUT);
   unsigned long ch2in = pulseIn(RCVR_CH2, HIGH, PWM_TIMEOUT);
 
-  Serial.print(ch1in); Serial.print(" "); Serial.print(ch2in); Serial.print(" "); Serial.print(ch3in); Serial.print(" \r");
-
   if (ch3in > 900 && ch3in < 1100)     /* ch3 switch low */
     boat_state = manual;
   else if (ch3in > 1900 && ch3in < 2100)  /* ch3 switch high */
     boat_state = autopilot;
 
   if (boat_state == manual) {
-    sout = ch1in == 0 ? STEERING_DEFAULT : ch1in;
-    tout = ch2in == 0 ? THROTTLE_DEFAULT : ch2in;
+    sout = acceptable(ch1in) ? ch1in : sprev;
+    tout = acceptable(ch2in) ? ch2in : tprev;
   } else if (boat_state == autopilot) {
-    sout = autoStrIn == 0 ? STEERING_DEFAULT : autoStrIn;
-    tout = autoThrIn == 0 ? THROTTLE_DEFAULT : autoThrIn;
+    sout = acceptable(autoStrIn) ? autoStrIn : sprev;
+    tout = acceptable(autoThrIn) ? autoThrIn : tprev;
   }
 
   tout = tout > T_CAP ? T_CAP : tout; /* limit throttle to some arbitrary number */
+  tprev = tout;
+  sprev = sout;
 
   steeringOutput.writeMicroseconds((int)sout);
   throttleOutput.writeMicroseconds((int)tout);
 
   Serial.print(sout); Serial.print(" "); Serial.print(tout); Serial.print(" | ");
   Serial.print(autoStrIn); Serial.print(" "); Serial.print(autoThrIn); Serial.print(" | ");
-  Serial.print(ch1in); Serial.print(" "); Serial.print(ch2in); Serial.print(" "); Serial.print(ch3in); Serial.println();
+  Serial.print(ch1in); Serial.print(" "); Serial.print(ch2in); Serial.print(" "); Serial.print(ch3in); 
+  Serial.print(" | "); Serial.print(acceptable(ch1in)); Serial.print(" "); Serial.print(acceptable(ch2in));
+  
+  Serial.println();
 
   if (blinkMetro.check()) {   /* LED blink to check loop still running */ 
     ledState = !ledState;
