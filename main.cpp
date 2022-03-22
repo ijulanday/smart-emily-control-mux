@@ -23,6 +23,7 @@
 #define THROTTLE_DEFAULT    900
 #define PWM_TIMEOUT         100000
 #define T_CAP               2000
+#define DISABLE_CALIB
 
 /* servos for writing PWM to actuators */
 Servo steeringOutput;
@@ -105,6 +106,9 @@ void setup() {
   throttleOutput.writeMicroseconds((int)tout);
 
   Serial.begin(9600);
+  #ifdef DISABLE_CALIB 
+    delay(3000);
+  #endif
 }
 
 
