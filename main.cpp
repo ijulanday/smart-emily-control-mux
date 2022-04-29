@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <Servo.h>
 #include <Metro.h>
-#include <keybdb.h>
 
 /* constants (pins, etc) */
 #define STEERING_AUTOPILOT  6
